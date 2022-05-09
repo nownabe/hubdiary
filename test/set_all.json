@@ -1,0 +1,6 @@
+{
+    "repo": "testowner/testrepo",
+    "user": "testuser",
+    "email": "testuser@example.com",
+    "pat": "testpat"
+}
