@@ -62,6 +62,11 @@ func Test_newConfig(t *testing.T) {
 			&config{"gitcfg/diary", "gitcfg", "gitcfg@example.com", "envpat"},
 			false,
 		},
+		"invalid_json": {
+			args{"test/invalid.json", "", "", "", ""},
+			&config{},
+			true,
+		},
 	}
 
 	xdg.ConfigHome = "./test"
