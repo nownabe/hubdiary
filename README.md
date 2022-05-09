@@ -32,14 +32,14 @@ This is an example.
 
 ```json
 {
-  "repository": "owner/repo",
+  "repo": "owner/repo",
   "user": "owner",
   "email": "owner@users.noreply.github.com",
   "pat": "xxx"
 }
 ```
 
-* `repository`: Repository to save diary. Default is `"diary"`.
+* `repository`: Repository to store diary in. Default is `"${user}/diary"`.
 * `user`: Name of the author of commits. Default is the user of `.gitconfig`.
 * `email`: Email of the author of commits. Default is the email of `.gitconfig`.
 * `pat`: GitHub Personal Access Token. If not specified in the config file, pat is given by `$GITHUB_PAT`.
