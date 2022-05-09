@@ -32,7 +32,7 @@ This is an example.
 
 ```json
 {
-  "repository": "github.com/owner/repo",
+  "repository": "owner/repo",
   "user": "owner",
   "email": "owner@users.noreply.github.com",
   "pat": "xxx"
