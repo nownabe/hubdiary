@@ -15,7 +15,7 @@ func (e *editor) Edit(text string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to create temp file: %w", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer removeTempFile(tmpFile.Name())
 
 	if _, err := tmpFile.Write([]byte(text)); err != nil {
 		return "", fmt.Errorf("failed to write text to tempfile: %w", err)
