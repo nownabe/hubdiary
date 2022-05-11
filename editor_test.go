@@ -3,9 +3,11 @@ package main
 import "testing"
 
 func Test_editor(t *testing.T) {
-	e := editor{"test/editor.sh"}
-	actual, err := e.Edit("")
+	t.Parallel()
 
+	e := editor{"test/editor.sh"}
+
+	actual, err := e.Edit("")
 	if err != nil {
 		t.Fatalf("error is not expected: %v", err)
 	}
