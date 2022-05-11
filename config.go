@@ -21,18 +21,24 @@ type config struct {
 	PAT   string `json:"pat"`
 }
 
+type configLoader struct {
+	gitConfig gitconfig.Config
+	path      string
+	envPAT    string
+}
+
 type gitConfig struct {
 	UserName  string `gitconfig:"user.name"`
 	UserEmail string `gitconfig:"user.email"`
 }
 
-func newConfig(gitCfg gitconfig.Config, configPath, repo, user, email, pat string) (*config, error) {
-	cfg, err := configFromFile(configPath)
+func (l *configLoader) Load(repo, user, email, pat string) (*config, error) {
+	cfg, err := l.loadFile()
 	if err != nil {
 		return nil, err
 	}
 
-	if err := applyDefaultConfig(gitCfg, cfg); err != nil {
+	if err := l.applyDefaultConfig(cfg); err != nil {
 		return nil, err
 	}
 
@@ -55,10 +61,10 @@ func newConfig(gitCfg gitconfig.Config, configPath, repo, user, email, pat strin
 	return cfg, nil
 }
 
-func applyDefaultConfig(gitCfg gitconfig.Config, cfg *config) error {
+func (l *configLoader) applyDefaultConfig(cfg *config) error {
 	var gc gitConfig
 
-	if err := gitCfg.Load(&gc); err != nil {
+	if err := l.gitConfig.Load(&gc); err != nil {
 		return fmt.Errorf("failed to load gitconfig: %w", err)
 	}
 
@@ -75,13 +81,14 @@ func applyDefaultConfig(gitCfg gitconfig.Config, cfg *config) error {
 	}
 
 	if cfg.PAT == "" {
-		cfg.PAT = os.Getenv(patEnvName)
+		cfg.PAT = l.envPAT
 	}
 
 	return nil
 }
 
-func configFromFile(configPath string) (*config, error) {
+func (l *configLoader) loadFile() (*config, error) {
+	configPath := l.path
 	if configPath == "" {
 		configPath = path.Join(xdg.ConfigHome, "hubdiary", "config.json")
 	}
