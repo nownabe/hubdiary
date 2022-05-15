@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 	"testing"
 
 	"github.com/adrg/xdg"
@@ -62,24 +61,22 @@ func Test_newConfig(t *testing.T) {
 			&config{"gitcfg/diary", "gitcfg", "gitcfg@example.com", "envpat"},
 			false,
 		},
+		"invalid_json": {
+			args{"test/invalid.json", "", "", "", ""},
+			&config{},
+			true,
+		},
 	}
 
 	xdg.ConfigHome = "./test"
-
-	orgPAT := os.Getenv("GITHUB_PAT")
-	os.Setenv(patEnvName, "envpat")
-	defer func() {
-		os.Setenv(patEnvName, orgPAT)
-	}()
-
 	gitConfig := gitconfig.File("test/gitconfig")
 
 	for name, c := range cases {
 		c := c
 		t.Run(name, func(t *testing.T) {
-			// t.Parallel()
-			cfg, err := newConfig(gitConfig, c.input.configPath,
-				c.input.repo, c.input.user, c.input.email, c.input.pat)
+			t.Parallel()
+			cl := &configLoader{gitConfig, c.input.configPath, "envpat"}
+			cfg, err := cl.Load(c.input.repo, c.input.user, c.input.email, c.input.pat)
 
 			if c.expectErr && err == nil {
 				t.Fatal("error is expected")
