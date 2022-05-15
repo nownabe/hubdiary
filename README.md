@@ -5,7 +5,7 @@ hubdiary is a CLI to write your diary and save it in a GitHub repository.
 ## Install
 
 ```bash
-go install go.nownabe.dev/hubdiary
+go install go.nownabe.dev/hubdiary@latest
 ```
 
 ## Usage
