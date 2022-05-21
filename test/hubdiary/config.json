@@ -1,6 +1,4 @@
 {
-    "repo": "home/home",
-    "user": "home",
-    "email": "home@example.com",
-    "pat": "homepat"
+    "owner": "home",
+    "repo": "homerepo"
 }

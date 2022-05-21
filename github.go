@@ -3,19 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/google/go-github/v44/github"
 	"golang.org/x/oauth2"
 )
 
 type githubRepo struct {
-	repositories   *github.RepositoriesService
-	owner          string
-	repo           string
-	branch         string
-	committerName  string
-	committerEmail string
+	repositories *github.RepositoriesService
+	*config
 }
 
 func newGithubRepo(ctx context.Context, cfg *config) *githubRepo {
@@ -26,22 +21,16 @@ func newGithubRepo(ctx context.Context, cfg *config) *githubRepo {
 
 	c := github.NewClient(tc)
 
-	ownerAndRepo := strings.Split(cfg.Repo, "/")
-
 	return &githubRepo{
-		repositories:   c.Repositories,
-		owner:          ownerAndRepo[0],
-		repo:           ownerAndRepo[1],
-		branch:         "main", // TODO: Move to config
-		committerName:  cfg.User,
-		committerEmail: cfg.Email,
+		repositories: c.Repositories,
+		config:       cfg,
 	}
 }
 
 func (r *githubRepo) ReadContent(ctx context.Context, path string) (string, string, error) {
-	opts := &github.RepositoryContentGetOptions{Ref: r.branch}
+	opts := &github.RepositoryContentGetOptions{Ref: r.Branch}
 
-	repoContent, _, _, err := r.repositories.GetContents(ctx, r.owner, r.repo, path, opts)
+	repoContent, _, _, err := r.repositories.GetContents(ctx, r.Owner, r.Repo, path, opts)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to get content: %w", err)
 	}
@@ -56,27 +45,27 @@ func (r *githubRepo) ReadContent(ctx context.Context, path string) (string, stri
 
 func (r *githubRepo) WriteContent(ctx context.Context, path, content, sha string) error {
 	committer := &github.CommitAuthor{
-		Name:  github.String(r.committerName),
-		Email: github.String(r.committerEmail),
+		Name:  github.String(r.CommitterName),
+		Email: github.String(r.CommitterEmail),
 	}
 
 	opts := &github.RepositoryContentFileOptions{
 		Message:   github.String(""),
 		Content:   []byte(content),
-		Branch:    github.String(r.branch),
+		Branch:    github.String(r.Branch),
 		Committer: committer,
 	}
 
 	if sha == "" {
 		opts.Message = github.String("Created by hubdiary")
-		_, _, err := r.repositories.CreateFile(ctx, r.owner, r.repo, path, opts)
+		_, _, err := r.repositories.CreateFile(ctx, r.Owner, r.Repo, path, opts)
 		if err != nil {
 			return fmt.Errorf("failed to create file: %w", err)
 		}
 	} else {
 		opts.Message = github.String("Modified by hubdiary")
 		opts.SHA = github.String(sha)
-		_, _, err := r.repositories.UpdateFile(ctx, r.owner, r.repo, path, opts)
+		_, _, err := r.repositories.UpdateFile(ctx, r.Owner, r.Repo, path, opts)
 		if err != nil {
 			return fmt.Errorf("failed to update file: %w", err)
 		}
