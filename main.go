@@ -14,7 +14,7 @@ func main() {
 	cfg := parseConfig()
 
 	ctx := context.Background()
-	r := newGithubRepo(ctx, cfg)
+	repo := newGithubRepo(ctx, cfg)
 
 	var date time.Time
 
@@ -30,7 +30,7 @@ func main() {
 
 	path := date.Format("2006/01/02.md")
 
-	content, sha, err := r.ReadContent(ctx, path)
+	content, sha, err := repo.ReadContent(ctx, path)
 	if err != nil {
 		msg := err.Error()
 		if msg[len(msg)-16:] != "404 Not Found []" {
@@ -46,7 +46,7 @@ func main() {
 		panic(err)
 	}
 
-	if err := r.WriteContent(ctx, path, content, sha); err != nil {
+	if err := repo.WriteContent(ctx, path, content, sha); err != nil {
 		panic(err)
 	}
 }
