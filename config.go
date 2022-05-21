@@ -11,102 +11,57 @@ import (
 )
 
 const (
-	patEnvName = "GITHUB_PAT"
+	patEnvName    = "GITHUB_PAT"
+	editorEnvName = "EDITOR"
 )
 
 type config struct {
-	Repo  string `json:"repo"`
-	User  string `json:"user"`
-	Email string `json:"email"`
-	PAT   string `json:"pat"`
+	Owner          string `json:"owner" gitconfig:"user.name"`
+	Repo           string `json:"repo"`
+	Branch         string `json:"branch"`
+	CommitterName  string `json:"committer_name" gitconfig:"user.name"`
+	CommitterEmail string `json:"committer_email" gitconfig:"user.email"`
+	PAT            string `json:"pat"`
+	Editor         string `json:"editor"`
 }
 
-type configLoader struct {
-	gitConfig gitconfig.Config
-	path      string
-	envPAT    string
-}
-
-type gitConfig struct {
-	UserName  string `gitconfig:"user.name"`
-	UserEmail string `gitconfig:"user.email"`
-}
-
-func (l *configLoader) Load(repo, user, email, pat string) (*config, error) {
-	cfg, err := l.loadFile()
-	if err != nil {
-		return nil, err
+func newConfig(gitCfg gitconfig.Config) (*config, error) {
+	cfg := &config{
+		Repo:   "diary",
+		Branch: "main",
+		PAT:    os.Getenv(patEnvName),
+		Editor: os.Getenv(editorEnvName),
 	}
 
-	if err := l.applyDefaultConfig(cfg); err != nil {
-		return nil, err
-	}
-
-	if repo != "" {
-		cfg.Repo = repo
-	}
-
-	if user != "" {
-		cfg.User = user
-	}
-
-	if email != "" {
-		cfg.Email = email
-	}
-
-	if pat != "" {
-		cfg.PAT = pat
+	if err := gitCfg.Load(cfg); err != nil {
+		return nil, fmt.Errorf("failed to load gitconfig: %w", err)
 	}
 
 	return cfg, nil
 }
 
-func (l *configLoader) applyDefaultConfig(cfg *config) error {
-	var gc gitConfig
-
-	if err := l.gitConfig.Load(&gc); err != nil {
-		return fmt.Errorf("failed to load gitconfig: %w", err)
+func (cfg *config) getConfigPath(configPath string) string {
+	if configPath != "" {
+		return configPath
 	}
-
-	if cfg.User == "" {
-		cfg.User = gc.UserName
-	}
-
-	if cfg.Email == "" {
-		cfg.Email = gc.UserEmail
-	}
-
-	if cfg.Repo == "" {
-		cfg.Repo = cfg.User + "/diary"
-	}
-
-	if cfg.PAT == "" {
-		cfg.PAT = l.envPAT
-	}
-
-	return nil
+	return path.Join(xdg.ConfigHome, "hubdiary", "config.json")
 }
 
-func (l *configLoader) loadFile() (*config, error) {
-	configPath := l.path
-	if configPath == "" {
-		configPath = path.Join(xdg.ConfigHome, "hubdiary", "config.json")
-	}
-
-	cfg := &config{}
+func (cfg *config) loadFile(configPath string) error {
+	configPath = cfg.getConfigPath(configPath)
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		return cfg, nil
+		return fmt.Errorf("config file %s doesn't exist: %w", configPath, err)
 	}
 
 	data, err := os.ReadFile(configPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read config file `%s`: %w", configPath, err)
+		return fmt.Errorf("failed to read config file `%s`: %w", configPath, err)
 	}
 
 	if err := json.Unmarshal(data, cfg); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal config file: `%s`: %w", configPath, err)
+		return fmt.Errorf("failed to unmarshal config file: `%s`: %w", configPath, err)
 	}
 
-	return cfg, nil
+	return nil
 }

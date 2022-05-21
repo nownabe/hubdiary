@@ -1,6 +1,9 @@
 {
-    "repo": "testowner/testrepo",
-    "user": "testuser",
-    "email": "testuser@example.com",
-    "pat": "testpat"
+    "owner": "cfgowner",
+    "repo": "cfgrepo",
+    "branch": "cfgbranch",
+    "committer_name": "cfgname",
+    "committer_email": "cfgemail",
+    "pat": "cfgpat",
+    "editor": "cfgeditor"
 }

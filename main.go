@@ -10,54 +10,9 @@ import (
 	"github.com/motemen/go-gitconfig"
 )
 
+const ()
+
 func main() {
-	var (
-		configPath string
-		repo       string
-		user       string
-		email      string
-		pat        string
-	)
-
-	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr,
-			`hubdiary
-
-Usage:
-  %s [2006-01-02]
-
-`,
-			os.Args[0],
-		)
-
-		flag.PrintDefaults()
-	}
-
-	flag.StringVar(&configPath, "config", "",
-		`Path to config file. Default path is $XDG_CONFIG_HOME/hubdiary/config.json.
-
-This is an example:
-
-{
-	"repo": "owner/repo",
-	"user": "owner",
-	"email": "owner@users.noreply.github.com",
-	"pat": "xxx"
-}
-
-"user" and "email" is used for making git commits. If you specify these
-values as environment variables or command line arguments, values from
-the config file will be overwritten. To see details of each option,
-run "hubdiary -h".`)
-
-	flag.StringVar(&repo, "repo", "", "Repository to store diary in. Default is ${user}/diary.")
-	flag.StringVar(&user, "user", "", "Commit author name. Default is user.name of .gitconfig.")
-	flag.StringVar(&email, "email", "", "Commit author email. Default is user.email of .gitconfig.")
-	flag.StringVar(&pat, "pat", "",
-		fmt.Sprintf("GitHub Personal Access Token. You can specify it with %s environment variable.", patEnvName))
-
-	flag.Parse()
-
 	var date time.Time
 
 	if len(os.Args) == 2 {
@@ -71,14 +26,7 @@ run "hubdiary -h".`)
 	}
 
 	ctx := context.Background()
-
-	cl := &configLoader{
-		gitConfig: gitconfig.Default,
-		path:      configPath,
-		envPAT:    os.Getenv(patEnvName),
-	}
-	cfg, err := cl.Load(repo, user, email, pat)
-
+	cfg := parseConfig()
 	r := newGithubRepo(ctx, cfg)
 
 	path := date.Format("2006/01/02.md")
@@ -93,7 +41,7 @@ run "hubdiary -h".`)
 		content = fmt.Sprintf("# %s\n\n* \n", date.Format("2006-01-02"))
 	}
 
-	e := &editor{editor: "nvim"} // TODO: Move to config
+	e := &editor{editor: cfg.Editor}
 	content, err = e.Edit(content)
 	if err != nil {
 		panic(err)
@@ -102,4 +50,83 @@ run "hubdiary -h".`)
 	if err := r.WriteContent(ctx, path, content, sha); err != nil {
 		panic(err)
 	}
+}
+
+func parseConfig() *config {
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr,
+			`hubdiary
+
+Usage:
+  %s [2006-01-02]
+
+`,
+			os.Args[0],
+		)
+
+		flag.PrintDefaults()
+	}
+
+	configPath := flag.String("config", "",
+		`Path to config file. Default path is $XDG_CONFIG_HOME/hubdiary/config.json.
+
+This is an example:
+
+{
+	"owner": "owner",
+	"repo": "diaryrepo",
+	"branch": "main",
+	"committer_name": "owner",
+	"committer_email": "owner@users.noreply.github.com",
+	"pat": "xxx",
+	"editor": "vim"
+}
+
+"committer_name" and "committer_email" is used for making git commits.
+If you specify these values as command line arguments, values from the
+config file will be overwritten. To see details of each option,
+run "hubdiary -h".`)
+
+	owner := flag.String("owner", "", "Owner of repository to store diary in. Default comes from user.name of git config.")
+	repo := flag.String("repo", "", "Repository to store diary in. Default is 'diary'.")
+	branch := flag.String("branch", "", "Branch name to store diary in. Default is 'main'.")
+	committerName := flag.String("committerName", "", "Commit author name. Default comes from user.name of git config.")
+	committerEmail := flag.String("committerEmail", "", "Commit author email. Default comes from user.email of git config.")
+	pat := flag.String("pat", "", fmt.Sprintf("GitHub Personal Access Token. Default comes from $%s.", patEnvName))
+	editor := flag.String("editor", "", fmt.Sprintf("Editor path. Default comes from $%s", editorEnvName))
+
+	flag.Parse()
+
+	cfg, err := newConfig(gitconfig.Default)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := cfg.loadFile(*configPath); err != nil {
+		panic(err)
+	}
+
+	if *owner != "" {
+		cfg.Owner = *owner
+	}
+	if *repo != "" {
+		cfg.Repo = *repo
+	}
+	if *branch != "" {
+		cfg.Branch = *branch
+	}
+	if *committerName != "" {
+		cfg.CommitterName = *committerName
+	}
+	if *committerEmail != "" {
+		cfg.CommitterEmail = *committerEmail
+	}
+	if *pat != "" {
+		cfg.PAT = *pat
+	}
+	if *editor != "" {
+		cfg.Editor = *editor
+	}
+
+	return cfg
 }
