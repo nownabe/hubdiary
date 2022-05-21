@@ -10,8 +10,6 @@ import (
 	"github.com/motemen/go-gitconfig"
 )
 
-const ()
-
 func main() {
 	cfg := parseConfig()
 
