@@ -13,6 +13,11 @@ import (
 const ()
 
 func main() {
+	cfg := parseConfig()
+
+	ctx := context.Background()
+	r := newGithubRepo(ctx, cfg)
+
 	var date time.Time
 
 	if len(os.Args) == 2 {
@@ -24,10 +29,6 @@ func main() {
 	} else {
 		date = time.Now()
 	}
-
-	ctx := context.Background()
-	cfg := parseConfig()
-	r := newGithubRepo(ctx, cfg)
 
 	path := date.Format("2006/01/02.md")
 
