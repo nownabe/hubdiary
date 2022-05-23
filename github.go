@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/go-github/v44/github"
 	"golang.org/x/oauth2"
@@ -56,14 +57,16 @@ func (r *githubRepo) WriteContent(ctx context.Context, path, content, sha string
 		Committer: committer,
 	}
 
+	now := time.Now().Format(time.RFC3339)
+
 	if sha == "" {
-		opts.Message = github.String("Created by hubdiary")
+		opts.Message = github.String("Created by hubdiary at " + now)
 		_, _, err := r.repositories.CreateFile(ctx, r.Owner, r.Repo, path, opts)
 		if err != nil {
 			return fmt.Errorf("failed to create file: %w", err)
 		}
 	} else {
-		opts.Message = github.String("Modified by hubdiary")
+		opts.Message = github.String("Modified by hubdiary at " + now)
 		opts.SHA = github.String(sha)
 		_, _, err := r.repositories.UpdateFile(ctx, r.Owner, r.Repo, path, opts)
 		if err != nil {
