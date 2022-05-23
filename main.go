@@ -41,12 +41,17 @@ func main() {
 	}
 
 	e := &editor{editor: cfg.Editor}
-	content, err = e.Edit(content)
+	modified, err := e.Edit(content)
 	if err != nil {
 		panic(err)
 	}
 
-	if err := repo.WriteContent(ctx, path, content, sha); err != nil {
+	if content == modified {
+		fmt.Fprintln(os.Stderr, "Not changed")
+		os.Exit(0)
+	}
+
+	if err := repo.WriteContent(ctx, path, modified, sha); err != nil {
 		panic(err)
 	}
 }
