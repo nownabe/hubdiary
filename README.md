@@ -32,14 +32,20 @@ This is an example.
 
 ```json
 {
-  "repo": "owner/repo",
-  "user": "owner",
-  "email": "owner@users.noreply.github.com",
-  "pat": "xxx"
+  "owner": "owner",
+  "repo": "repo",
+  "branch": "main",
+  "committer_name": "myname",
+  "committer_email": "myname@users.noreply.github.com",
+  "pat": "GitHub personal access token",
+  "editor": "/path/to/vim"
 }
 ```
 
-* `repository`: Repository to store diary in. Default is `"${user}/diary"`.
-* `user`: Name of the author of commits. Default is the user of `.gitconfig`.
-* `email`: Email of the author of commits. Default is the email of `.gitconfig`.
+* `owner`: Owner of repository to store diary in. Default comes from `user.name` of git config.
+* `repo`: Repository to store diary in. Default is `diary`.
+* `branch`: Branch of the repository to store diary in. Default is `main`.
+* `committer_name`: Name of the author of commits. Default comes from `user.name` of git config.
+* `committer_email`: Email of the author of commits. Default comes from `user.email` of git config.
 * `pat`: GitHub Personal Access Token. If not specified in the config file, pat is given by `$GITHUB_PAT`.
+* `editor`: Editor to write diary. If not specified, hubdiary uses `$EDITOR`.
